@@ -12,6 +12,7 @@ enum XAttrError: Error {
     case unknownError
     case nameTooLong
     case memoryAllocationFailed
+    case attributeNotFound
 }
 
 extension XAttrError {
@@ -21,6 +22,8 @@ extension XAttrError {
             self = .nameTooLong
         case ENOMEM:
             self = .memoryAllocationFailed
+        case ENOATTR:
+            self = .attributeNotFound
         default:
             self = .unknownError
         }

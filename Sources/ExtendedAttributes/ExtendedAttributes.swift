@@ -58,7 +58,7 @@ extension URL {
     }
 
     /// Retrieve extended attribute data for file URL
-    public func extendedAttributeData(rawAttributeName: String) throws -> Data {
+    public func extendedAttributeData(rawAttributeName: String, errorIfMissing: Bool = false) throws -> Data {
         guard self.isFileURL else {
             throw XAttrError.unsupportedURL
         }
@@ -74,7 +74,13 @@ extension URL {
         let len = getxattr(self.path, rawAttributeName, bytes, maxCapacity, 0, opts)
 
         if len == -1 {
-            throw XAttrError(errno: errno)
+            let err = XAttrError(errno: errno)
+
+            if err == .attributeNotFound && errorIfMissing == false {
+                return Data()
+            }
+
+            throw err
         }
 
         if len == 0 {
@@ -115,7 +121,7 @@ extension URL {
         }
     }
 
-    public func removeExtendedAttribute(rawAttributeName: String) throws {
+    public func removeExtendedAttribute(rawAttributeName: String, errorIfMissing: Bool = false) throws {
         guard self.isFileURL else {
             throw XAttrError.unsupportedURL
         }
@@ -125,7 +131,13 @@ extension URL {
         let result: Int32 = removexattr(self.path, rawAttributeName, opts)
 
         if result == -1 {
-            throw XAttrError(errno: errno)
+            let err = XAttrError(errno: errno)
+
+            if err == .attributeNotFound && errorIfMissing == false {
+                return
+            }
+
+            throw err
         }
     }
 

@@ -54,4 +54,25 @@ final class ExtendedAttributesTests: XCTestCase {
         XCTAssertTrue(finalAttrs.isEmpty)
     }
 
+    func testReadDataForMissingAttribute() throws {
+        let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+
+        guard FileManager.default.createFile(atPath: tempFile.path, contents: nil) == true else {
+            return XCTFail("failed to create temporary file")
+        }
+
+        let outDat = try tempFile.extendedAttributeData(rawAttributeName: "co.brushedtype.xattr-test")
+        XCTAssertTrue(outDat.isEmpty)
+    }
+
+    func testRemoveMissingAttribute() throws {
+        let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+
+        guard FileManager.default.createFile(atPath: tempFile.path, contents: nil) == true else {
+            return XCTFail("failed to create temporary file")
+        }
+
+        XCTAssertNoThrow(try tempFile.removeExtendedAttribute(rawAttributeName: "co.brushedtype.xattr-test"))
+    }
+
 }
