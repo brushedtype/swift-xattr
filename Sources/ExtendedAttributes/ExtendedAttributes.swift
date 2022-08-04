@@ -85,7 +85,18 @@ extension URL {
     }
 
     public func setExtendedAttributeData(_ data: Data, attributeName: String, flags: ExtendedAttribute.Flags) throws {
-        guard attributeName.utf8.count < XATTR_MAXNAMELEN else {
+        guard let attrName = xattr_name_with_flags(attributeName, flags.rawValue) else {
+            throw XAttrError(errno: errno)
+        }
+        defer {
+            attrName.deallocate()
+        }
+
+        try setExtendedAttributeData(data, rawAttributeName: String(cString: attrName))
+    }
+
+    public func setExtendedAttributeData(_ data: Data, rawAttributeName: String) throws {
+        guard rawAttributeName.utf8.count < XATTR_MAXNAMELEN else {
             throw XAttrError.nameTooLong
         }
 
@@ -93,11 +104,10 @@ extension URL {
             throw XAttrError.unsupportedURL
         }
 
-        let attrName = xattr_name_with_flags(attributeName, flags.rawValue)
         let opts: Int32 = 0
 
         let result: Int32 = data.withUnsafeBytes { (ptr: UnsafeRawBufferPointer) in
-            return setxattr(self.path, attrName, ptr.baseAddress, data.count, 0, opts)
+            return setxattr(self.path, rawAttributeName, ptr.baseAddress, data.count, 0, opts)
         }
 
         if result == -1 {
